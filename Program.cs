@@ -146,6 +146,32 @@ void PlantOfTheDay()
     }
 }
 
+void SearchByLightLevel()
+{
+    List<Plant> FilteredPlants = new List<Plant>();
+    Console.WriteLine("Enter the maximum light level:");
+    int MaxLight = 0;
+    MaxLight = int.Parse(Console.ReadLine());
+    while (MaxLight > 5 || MaxLight < 1)
+    {
+        Console.WriteLine("Light level must be from 1 to 5");
+        MaxLight = int.Parse(Console.ReadLine());
+    }
+    
+    foreach (Plant plant in plants)
+    {
+        if (plant.LightNeeds <= MaxLight)
+        {
+            FilteredPlants.Add(plant);
+        }
+    }
+    Console.WriteLine($"Plants equal or less than {MaxLight} light need:");
+    for (int i = 0; i < FilteredPlants.Count; i++)
+    {
+        Console.WriteLine($"{i + 1}. {FilteredPlants[i].Species} {(FilteredPlants[i].Sold ? "was sold" : "is available") } for ${FilteredPlants[i].AskingPrice}");
+    }
+}
+
 string choice = null;
 while (choice != "0")
 {
@@ -155,7 +181,8 @@ while (choice != "0")
                         2. Post a new plant
                         3. Adopt a plant
                         4. Delist a plant
-                        5. Plant of the day");
+                        5. Plant of the day
+                        6. Search plants by light level");
                         choice = Console.ReadLine();
     if (choice == "0")
     {
@@ -184,6 +211,11 @@ while (choice != "0")
     else if (choice == "5")
     {
         PlantOfTheDay();
+        PressToContinue();
+    }
+    else if (choice == "6")
+    {
+        SearchByLightLevel();
         PressToContinue();
     }
     else
