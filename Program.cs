@@ -9,6 +9,7 @@ List<Plant> plants = new List<Plant>()
         AskingPrice = 99.99M,
         ZIP = 37138,
         Sold = false,
+        AvailableUntil = new DateTime(2024, 6, 23)
     },
     new Plant()
     {
@@ -17,6 +18,7 @@ List<Plant> plants = new List<Plant>()
         AskingPrice = 50.00M,
         ZIP = 37205,
         Sold = true,
+        AvailableUntil = new DateTime(2024, 4, 15)
     },
     new Plant()
     {
@@ -25,14 +27,16 @@ List<Plant> plants = new List<Plant>()
         AskingPrice = 82.35M,
         ZIP = 37040,
         Sold = false,
+        AvailableUntil = new DateTime(2024, 4, 1)
     },
     new Plant()
     {
         Species = "Archaefructus",
         LightNeeds = 4,
-        AskingPrice = 999.99M,
+        AskingPrice = 999.98M,
         ZIP = 11111,
         Sold = false,
+        AvailableUntil = new DateTime(2025, 12, 20)
     },
     new Plant()
     {
@@ -41,6 +45,7 @@ List<Plant> plants = new List<Plant>()
         AskingPrice = 7.17M,
         ZIP = 39275,
         Sold = true,
+        AvailableUntil = new DateTime(2024, 5, 5)
     },
 };
 
@@ -52,9 +57,12 @@ Console.WriteLine(greeting);
 void ListPlantInventory()
 {
     Console.WriteLine("Plant Inventory:");
-    for (int i = 0; i < plants.Count; i++)
+    int i = 0;
+    foreach (Plant plant in plants)
     {
-        Console.WriteLine($"{i + 1}. {plants[i].Species} {(plants[i].Sold ? "was sold" : "is available") } for ${plants[i].AskingPrice}");
+        string EachPlantDetails = PlantDetails(plant);
+        Console.WriteLine($"{i + 1}. {EachPlantDetails}");
+        i++;
     }
 }
 
@@ -63,6 +71,29 @@ void PressToContinue()
     Console.WriteLine("Press any key to continue");
     Console.ReadKey(); // THIS DOES NOT WORK IN GIT BASH STANDALONE BUT IT WORKS IN VSCODE TERMINAL GITBASH FOR SOME REASON
     Console.Clear();
+}
+
+DateTime GetDateForExpiry()
+{
+    Console.WriteLine("Enter expiration date, starting with year:");
+    int ExpYear = int.Parse(Console.ReadLine());
+    Console.WriteLine("Month:");
+    int ExpMonth = int.Parse(Console.ReadLine());
+    Console.WriteLine("Day:");
+    int ExpDay = int.Parse(Console.ReadLine());
+
+    DateTime bubkis = new DateTime(1970, 1, 1); //this is a hack - I have to have a return for the function to work, even though it exits.
+    try
+    {
+        DateTime ExpiryDate = new DateTime(ExpYear, ExpMonth, ExpDay);
+        return ExpiryDate;
+    }
+    catch (ArgumentOutOfRangeException)
+    {
+        Console.WriteLine("Invalid date");
+        return bubkis;
+    }
+    
 }
 
 void GetAndAddPlant()
@@ -89,6 +120,8 @@ void GetAndAddPlant()
     Console.WriteLine("zip code:");
     int NewZIP = int.Parse(Console.ReadLine().Trim());
 
+    DateTime ExpiryDate = GetDateForExpiry();
+
     Plant NewPlant = new Plant()
     {
         Species = NewSpecies,
@@ -96,6 +129,7 @@ void GetAndAddPlant()
         AskingPrice = NewAskingPrice,
         ZIP = NewZIP,
         Sold = false,
+        AvailableUntil = ExpiryDate
     };
 
     plants.Add(NewPlant);
@@ -103,16 +137,31 @@ void GetAndAddPlant()
 
 void AdoptAPlant()
 {
-    ListPlantInventory();
+    List<Plant> FilteredPlants = new List<Plant>();
+    foreach (Plant plant in plants)
+    {
+        int DateComparison = DateTime.Compare(plant.AvailableUntil, DateTime.Now);
+        if (plant.Sold == false && DateComparison >= 0)
+        {
+            FilteredPlants.Add(plant);
+        }
+    }
+
+    Console.WriteLine("Plant Inventory:");
+    for (int i = 0; i < FilteredPlants.Count; i++)
+    {
+        Console.WriteLine($"{i + 1}. {FilteredPlants[i].Species} {(FilteredPlants[i].Sold ? "was sold" : "is available") } for ${FilteredPlants[i].AskingPrice}");
+    }
+
     Console.WriteLine("Enter the number for the plant you wish to adopt!");
     int PlantToBeAdopted = int.Parse(Console.ReadLine()) - 1;
-    if (plants[PlantToBeAdopted].Sold == true)
+    if (FilteredPlants[PlantToBeAdopted].Sold == true)
     {
         Console.WriteLine("Plant already adopted!");
     }
     else
     {
-        plants[PlantToBeAdopted].Sold = true;
+        FilteredPlants[PlantToBeAdopted].Sold = true;
         Console.WriteLine("Plant successfully adopted!");
     }
 }
@@ -172,6 +221,75 @@ void SearchByLightLevel()
     }
 }
 
+void StatsForPlants()
+{
+    decimal LowestPlant = 999.99M;
+    string LowestPlantName = "";
+    foreach (Plant plant in plants)
+    {
+        if (plant.AskingPrice < LowestPlant)
+        {
+            LowestPlant = plant.AskingPrice;
+            LowestPlantName = plant.Species;
+        }
+    }
+
+    List<Plant> AvailablePlants = new List<Plant>();
+    foreach (Plant plant in plants)
+    {
+        int DateComparison = DateTime.Compare(plant.AvailableUntil, DateTime.Now);
+        if (plant.Sold == false && DateComparison >= 0)
+        {
+            AvailablePlants.Add(plant);
+        }
+    }
+    int AvailablePlantCount = AvailablePlants.Count;
+
+    int HighestPlantLight = -1;
+    string HighestLightPlantName = "";
+    foreach (Plant plant in plants)
+    {
+        if (plant.LightNeeds > HighestPlantLight)
+        {
+            HighestPlantLight = plant.LightNeeds;
+            HighestLightPlantName = plant.Species;
+        }
+    }
+    int LightCount = 0;
+    foreach (Plant plant in plants)
+    {
+        LightCount += plant.LightNeeds;
+    }
+    double LightCountFixed = (double)LightCount;
+    double AverageLight = LightCountFixed / plants.Count;
+
+    double SoldPlants = 0;
+    foreach (Plant plant in plants)
+    {
+        if (plant.Sold == true)
+        {
+            SoldPlants ++;
+            Console.WriteLine("QUACK");
+        }
+    }
+    Console.WriteLine(SoldPlants / plants.Count);
+    double PercentageSold = (SoldPlants / plants.Count) * 100;
+
+    Console.WriteLine(@$" Plant inventory stats:
+                        Lowest price plant: {LowestPlantName}
+                        Number of plants available: {AvailablePlantCount}
+                        Highest light need: {HighestLightPlantName}
+                        Average light need: {AverageLight}
+                        Percent of plants adopted: {PercentageSold}");
+}
+
+string PlantDetails(Plant plant)
+{
+    string plantString = $"{plant.Species} {(plant.Sold ? "was sold" : "is available") } for ${plant.AskingPrice}";
+    return plantString;
+}
+
+
 string choice = null;
 while (choice != "0")
 {
@@ -182,7 +300,8 @@ while (choice != "0")
                         3. Adopt a plant
                         4. Delist a plant
                         5. Plant of the day
-                        6. Search plants by light level");
+                        6. Search plants by light level
+                        7. Plant stats!");
                         choice = Console.ReadLine();
     if (choice == "0")
     {
@@ -216,6 +335,11 @@ while (choice != "0")
     else if (choice == "6")
     {
         SearchByLightLevel();
+        PressToContinue();
+    }
+    else if (choice == "7")
+    {
+        StatsForPlants();
         PressToContinue();
     }
     else
